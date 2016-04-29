@@ -8,8 +8,8 @@ properties.load(project.rootProject.file('local.properties').newDataInputStream(
 def projectName = "activator"
 def versionTag = "1.0"
 def groupId = "cn.ismartv.activator"
-def siteUrl = 'git@git.oschina.net:iiidai/InjectDB.git'
-def gitUrl = 'git@git.oschina.net:iiidai/InjectDB.git'
+def siteUrl = 'git@github.com:JasonFengIce/IsmartvActivator.git'
+def gitUrl = 'git@github.com:JasonFengIce/IsmartvActivator.gitt'
 
 
 version = versionTag
@@ -31,7 +31,7 @@ bintray {
     pkg {
         repo = 'maven'
         name = projectName
-        desc = 'This is Android Sqlite Helper'
+        desc = 'Ismartv Activator'
         websiteUrl = siteUrl
         issueTrackerUrl = 'https://github.com/bintray/bintray-examples/issues'
         vcsUrl = gitUrl
