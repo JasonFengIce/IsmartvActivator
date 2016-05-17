@@ -8,7 +8,6 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 
-import cn.ismartv.activator.core.mnative.NativeManager;
 
 public class AESOperator {
     private static AESOperator instance = null;
@@ -79,11 +78,9 @@ public class AESOperator {
 
     public String AES_decrypt(String key, String content) {
         String result = "";
-        NativeManager nativeManager = new NativeManager();
         byte[] base64;
         try {
             base64 = Coder.UrlSafeBase64_decode(content);
-//	    	result = nativeManager.AESdecrypt(key.substring(0, 16), base64);
             result = SkyAESTool2.decrypt(key.substring(0, 16), base64);
         } catch (UnsupportedEncodingException e) {
             // TODO Auto-generated catch block

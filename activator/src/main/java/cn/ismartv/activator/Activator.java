@@ -5,6 +5,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.telephony.TelephonyManager;
+import android.util.Base64;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -19,7 +20,8 @@ import java.util.concurrent.TimeUnit;
 
 import cn.ismartv.activator.core.http.HttpClientAPI;
 import cn.ismartv.activator.core.http.HttpClientAPI.ExcuteActivator;
-import cn.ismartv.activator.core.mnative.NativeManager;
+import cn.ismartv.activator.core.rsa.RSACoder;
+import cn.ismartv.activator.core.rsa.SkyAESTool2;
 import cn.ismartv.activator.data.Result;
 import cn.ismartv.activator.utils.MD5Utils;
 import cn.ismartv.log.interceptor.HttpLoggingInterceptor;
@@ -79,13 +81,9 @@ public class Activator {
             activeCallback.onFailed("激活失败!!!");
         }
 
-        NativeManager nativeManager = new NativeManager();
         this.locationInfo = locationInfo;
         try {
-            this.sn = nativeManager.GetEtherentMac();
-            if ("noaddress".equals(this.sn)) {
-                this.sn = MD5Utils.encryptByMD5(getDeviceId() + Build.SERIAL);
-            }
+            this.sn = MD5Utils.encryptByMD5(getDeviceId() + Build.SERIAL);
             this.manufacture = manufacture;
             this.kind = kind.toLowerCase();
             this.version = version;
@@ -150,8 +148,7 @@ public class Activator {
 
 
     private void activator(String sn, final String manufacture, final String kind, final String version, String fingerprint, final ActiveCallback activeCallback) {
-        NativeManager nativeManager = new NativeManager();
-        String result = nativeManager.decrypt(sn, mContext.getFileStreamPath(SIGN_FILE_NAME).getAbsolutePath(), new NativeManager.DecryptCallback() {
+        String result = decrypt(sn, mContext.getFileStreamPath(SIGN_FILE_NAME).getAbsolutePath(), new DecryptCallback() {
             @Override
             public void onFailure() {
                 active(manufacture, kind, version, locationInfo, activeCallback);
@@ -167,7 +164,7 @@ public class Activator {
         }
 
         String sign = "ismartv=201415&kind=" + kind + "&sn=" + sn;
-        String rsaEnResult = nativeManager.RSAEncrypt(publicKey, sign);
+        String rsaEnResult = ecodeWithPublic(sign, publicKey);
 
         ExcuteActivator activator = SKY_Retrofit.create(ExcuteActivator.class);
         activator.excute(sn, manufacture, kind, version, rsaEnResult, fingerprint, "v3_0", getAndroidDevicesInfo()).enqueue(new Callback<Result>() {
@@ -240,4 +237,38 @@ public class Activator {
         return deviceId;
     }
 
+    public String decrypt(String key, String ContentPath, DecryptCallback callback) {
+        File file = new File(ContentPath);
+        if (file.exists()) {
+            try {
+                FileInputStream fileInputStream = new FileInputStream(file);
+                int count = fileInputStream.available();
+                byte[] bytes = new byte[count];
+                fileInputStream.read(bytes);
+                fileInputStream.close();
+                return SkyAESTool2.decrypt(key.substring(0, 16), Base64.decode(bytes, Base64.URL_SAFE));
+            } catch (Exception e) {
+                file.delete();
+                Log.e(TAG, "NativeManager decrypt Exception");
+                callback.onFailure();
+                return "error";
+            }
+        }
+        return "";
+    }
+
+    public interface DecryptCallback {
+        void onFailure();
+    }
+
+    private String ecodeWithPublic(String string, String publicKey) {
+        try {
+            String input = MD5Utils.encryptByMD5(string);
+            byte[] rsaResult = RSACoder.encryptByPublicKey(input.getBytes(), publicKey);
+            return Base64.encodeToString(rsaResult, Base64.DEFAULT);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
