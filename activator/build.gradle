@@ -6,7 +6,7 @@ Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
 def projectName = "activator"
-def versionTag = "1.2"
+def versionTag = "1.3"
 def groupId = "cn.ismartv.activator"
 def siteUrl = 'git@github.com:JasonFengIce/IsmartvActivator.git'
 def gitUrl = 'git@github.com:JasonFengIce/IsmartvActivator.gitt'
