@@ -6,7 +6,6 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.util.Base64;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -62,10 +61,7 @@ public class IsmartvActivator {
         kind = Build.PRODUCT.replaceAll(" ", "_").toLowerCase();
         version = String.valueOf(getAppVersionCode());
         location = "SH";
-        Log.i(TAG, "device id: " + Md5.md5(getDeviceId()));
-        Log.i(TAG, "build serial: " + Md5.md5(Build.SERIAL));
         sn = Md5.md5((getDeviceId() + Build.SERIAL).trim());
-        Log.i(TAG, "sn: " + sn);
         fingerprint = Md5.md5(sn);
 
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
@@ -118,12 +114,8 @@ public class IsmartvActivator {
 
     private String getDeviceId() {
         String deviceId = new String();
-        try {
-            TelephonyManager tm = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
-            deviceId = tm.getDeviceId() == null ? "" : tm.getDeviceId();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        TelephonyManager tm = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
+        deviceId = tm.getDeviceId() == null ? "" : tm.getDeviceId();
         return deviceId;
     }
 
@@ -159,12 +151,9 @@ public class IsmartvActivator {
     }
 
     private void active() {
-
-        String result = decryptSign(sn, mContext.getFileStreamPath(SIGN_FILE_NAME).getAbsolutePath());
-
+        String signPath = mContext.getFileStreamPath(SIGN_FILE_NAME).getAbsolutePath();
+        String result = decryptSign(sn, signPath);
         String publicKey = result.split("\\$\\$\\$")[1];
-
-
         String sign = "ismartv=201415&kind=" + kind + "&sn=" + sn;
         String rsaEncryptResult = encryptWithPublic(sign, publicKey);
 
@@ -197,7 +186,6 @@ public class IsmartvActivator {
             String versionName = getAppVersionName();
             String serial = Build.SERIAL;
             String deviceId = getDeviceId();
-            String ID = Build.ID;
             String hh = Build.ID + "//" + Build.SERIAL;
             Md5.md5(Build.SERIAL + Build.ID);
             json.put("fingerprintE", Md5.md5(Build.SERIAL + Build.ID));
@@ -227,7 +215,6 @@ public class IsmartvActivator {
     }
 
     public String decryptSign(String key, String ContentPath) {
-        Log.i(TAG, "key: " + key);
         String decryptResult = new String();
         File file = new File(ContentPath);
         if (file.exists()) {
@@ -237,7 +224,6 @@ public class IsmartvActivator {
                 byte[] bytes = new byte[count];
                 fileInputStream.read(bytes);
                 fileInputStream.close();
-                Log.i(TAG, "result: " + new String(bytes));
                 decryptResult = SkyAESTool2.decrypt(key.substring(0, 16), Base64.decode(bytes, Base64.URL_SAFE));
             } catch (Exception e) {
                 file.delete();
