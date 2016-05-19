@@ -58,8 +58,10 @@ public class IsmartvActivator {
     public IsmartvActivator(Context context, Callback callback, String host) {
         mCallback = callback;
         mContext = context;
-        manufacture = Build.BRAND;
-        kind = Build.PRODUCT.replaceAll(" ", "_").toLowerCase();
+//        manufacture = Build.BRAND;
+        manufacture = "sharp";
+//        kind = Build.PRODUCT.replaceAll(" ", "_").toLowerCase();
+        kind = "lcd_s3a01";
         version = String.valueOf(getAppVersionCode());
         location = "SH";
         sn = Md5.md5((getDeviceId() + Build.SERIAL).trim());
