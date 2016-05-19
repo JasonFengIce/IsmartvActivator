@@ -22,7 +22,7 @@ import cn.ismartv.activator.core.http.HttpClientAPI;
 import cn.ismartv.activator.core.rsa.RSACoder;
 import cn.ismartv.activator.core.rsa.SkyAESTool2;
 import cn.ismartv.activator.data.Result;
-import cn.ismartv.activator.utils.MD5Utils;
+import cn.ismartv.boringssl.Md5;
 import cn.ismartv.log.interceptor.HttpLoggingInterceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
@@ -34,6 +34,7 @@ import retrofit2.Retrofit;
  * Created by huaijie on 5/17/16.
  */
 public class IsmartvActivator {
+    private static final String TAG = "IsmartvActivator";
     private static final String DEFAULT_HOST = "http://peachtest.tvxio.com";
     private static final String SIGN_FILE_NAME = "sign";
     private static final int DEFAULT_CONNECT_TIMEOUT = 2;
@@ -61,8 +62,11 @@ public class IsmartvActivator {
         kind = Build.PRODUCT.replaceAll(" ", "_").toLowerCase();
         version = String.valueOf(getAppVersionCode());
         location = "SH";
-        sn = getDeviceId() + Build.SERIAL;
-        fingerprint = sn;
+        Log.i(TAG, "device id: " + Md5.md5(getDeviceId()));
+        Log.i(TAG, "build serial: " + Md5.md5(Build.SERIAL));
+        sn = Md5.md5((getDeviceId() + Build.SERIAL).trim());
+        Log.i(TAG, "sn: " + sn);
+        fingerprint = Md5.md5(sn);
 
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
@@ -81,8 +85,11 @@ public class IsmartvActivator {
 
 
     public void execute() {
-
-
+        if (isSignFileExists()) {
+            active();
+        } else {
+            getLicence(mCallback);
+        }
     }
 
     private int getAppVersionCode() {
@@ -113,7 +120,7 @@ public class IsmartvActivator {
         String deviceId = new String();
         try {
             TelephonyManager tm = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
-            deviceId = tm.getDeviceId();
+            deviceId = tm.getDeviceId() == null ? "" : tm.getDeviceId();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -133,6 +140,7 @@ public class IsmartvActivator {
                 try {
                     if (response.body() != null) {
                         writeToSign(response.body().bytes());
+                        active();
                     } else {
                         callback.onFailure("get licence: " + response.errorBody().string());
                     }
@@ -151,8 +159,14 @@ public class IsmartvActivator {
     }
 
     private void active() {
+
+        String result = decryptSign(sn, mContext.getFileStreamPath(SIGN_FILE_NAME).getAbsolutePath());
+
+        String publicKey = result.split("\\$\\$\\$")[1];
+
+
         String sign = "ismartv=201415&kind=" + kind + "&sn=" + sn;
-        String rsaEncryptResult = encryptWithPublic(sign, "");
+        String rsaEncryptResult = encryptWithPublic(sign, publicKey);
 
         HttpClientAPI.ExcuteActivator activator = SKY_Retrofit.create(HttpClientAPI.ExcuteActivator.class);
         activator.excute(sn, manufacture, kind, version, rsaEncryptResult, fingerprint, "v3_0", getAndroidDevicesInfo()).enqueue(new retrofit2.Callback<Result>() {
@@ -185,8 +199,8 @@ public class IsmartvActivator {
             String deviceId = getDeviceId();
             String ID = Build.ID;
             String hh = Build.ID + "//" + Build.SERIAL;
-            MD5Utils.encryptByMD5(Build.SERIAL + Build.ID);
-            json.put("fingerprintE", MD5Utils.encryptByMD5(Build.SERIAL + Build.ID));
+            Md5.md5(Build.SERIAL + Build.ID);
+            json.put("fingerprintE", Md5.md5(Build.SERIAL + Build.ID));
             json.put("fingerprintD", hh);
             json.put("versionName", versionName);
             json.put("serial", serial);
@@ -213,6 +227,7 @@ public class IsmartvActivator {
     }
 
     public String decryptSign(String key, String ContentPath) {
+        Log.i(TAG, "key: " + key);
         String decryptResult = new String();
         File file = new File(ContentPath);
         if (file.exists()) {
@@ -222,6 +237,7 @@ public class IsmartvActivator {
                 byte[] bytes = new byte[count];
                 fileInputStream.read(bytes);
                 fileInputStream.close();
+                Log.i(TAG, "result: " + new String(bytes));
                 decryptResult = SkyAESTool2.decrypt(key.substring(0, 16), Base64.decode(bytes, Base64.URL_SAFE));
             } catch (Exception e) {
                 file.delete();
@@ -234,7 +250,7 @@ public class IsmartvActivator {
 
     private String encryptWithPublic(String string, String publicKey) {
         try {
-            String input = MD5Utils.encryptByMD5(string);
+            String input = Md5.md5(string);
             byte[] rsaResult = RSACoder.encryptByPublicKey(input.getBytes(), publicKey);
             return Base64.encodeToString(rsaResult, Base64.DEFAULT);
         } catch (Exception e) {
@@ -243,7 +259,7 @@ public class IsmartvActivator {
         return null;
     }
 
-    interface Callback {
+    public interface Callback {
         void onSuccess(Result result);
 
         void onFailure(String msg);

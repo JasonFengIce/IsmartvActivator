@@ -44,12 +44,12 @@ bintray {
 
 
 android {
-    compileSdkVersion 23
+    compileSdkVersion 22
     buildToolsVersion "23.0.3"
 
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 23
+        targetSdkVersion 22
         versionCode 1
         versionName "1.0"
     }
@@ -59,6 +59,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+  lintOptions {
+          abortOnError false
+      }
 }
 
 dependencies {
@@ -69,6 +73,7 @@ dependencies {
     compile 'com.squareup.retrofit2:converter-gson:2.0.0-beta3'
     compile 'com.squareup.okhttp3:okhttp:3.0.0-RC1'
     compile 'com.google.code.gson:gson:2.5'
+    compile 'cn.ismartv.boringssl:libboringssl:1.1'
 }
 
 task sourcesJar(type: Jar) {
