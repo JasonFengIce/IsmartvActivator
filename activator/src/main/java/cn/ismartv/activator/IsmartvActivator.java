@@ -25,9 +25,10 @@ import cn.ismartv.boringssl.Md5;
 import cn.ismartv.log.interceptor.HttpLoggingInterceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
-import retrofit2.GsonConverterFactory;
+import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * Created by huaijie on 5/17/16.
@@ -128,7 +129,7 @@ public class IsmartvActivator {
         HttpClientAPI.GetLicence client = SKY_Retrofit.create(HttpClientAPI.GetLicence.class);
         client.excute(fingerprint, sn, manufacture, "1").enqueue(new retrofit2.Callback<ResponseBody>() {
             @Override
-            public void onResponse(Response<ResponseBody> response) {
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 try {
                     if (response.body() != null) {
                         writeToSign(response.body().bytes());
@@ -144,10 +145,11 @@ public class IsmartvActivator {
             }
 
             @Override
-            public void onFailure(Throwable t) {
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
                 callback.onFailure("get licence: " + t.getMessage());
             }
         });
+
     }
 
     private void active() {
@@ -160,7 +162,7 @@ public class IsmartvActivator {
         HttpClientAPI.ExcuteActivator activator = SKY_Retrofit.create(HttpClientAPI.ExcuteActivator.class);
         activator.excute(sn, manufacture, kind, version, rsaEncryptResult, fingerprint, "v3_0", getAndroidDevicesInfo()).enqueue(new retrofit2.Callback<Result>() {
             @Override
-            public void onResponse(Response<Result> response) {
+            public void onResponse(Call<Result> call, Response<Result> response) {
                 if (response.errorBody() != null) {
                     try {
                         mCallback.onFailure("active: " + response.errorBody().string());
@@ -173,7 +175,7 @@ public class IsmartvActivator {
             }
 
             @Override
-            public void onFailure(Throwable t) {
+            public void onFailure(Call<Result> call, Throwable t) {
                 mCallback.onFailure("active: " + t.getMessage());
             }
         });

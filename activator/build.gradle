@@ -6,7 +6,7 @@ Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
 def projectName = "activator"
-def versionTag = "1.1"
+def versionTag = "1.2"
 def groupId = "cn.ismartv.activator"
 def siteUrl = 'git@github.com:JasonFengIce/IsmartvActivator.git'
 def gitUrl = 'git@github.com:JasonFengIce/IsmartvActivator.gitt'
@@ -60,18 +60,18 @@ android {
         }
     }
 
-  lintOptions {
-          abortOnError false
-      }
+    lintOptions {
+        abortOnError false
+    }
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
     compile 'cn.ismartv.log.interceptor:loginterceptor:1.2'
-    compile 'com.squareup.retrofit2:retrofit:2.0.0-beta3'
-    compile 'com.squareup.retrofit2:converter-gson:2.0.0-beta3'
-    compile 'com.squareup.okhttp3:okhttp:3.0.0-RC1'
+    compile 'com.squareup.okhttp3:okhttp:3.2.0'
+    compile 'com.squareup.retrofit2:retrofit:2.0.2'
+    compile 'com.squareup.retrofit2:converter-gson:2.0.2'
     compile 'com.google.code.gson:gson:2.5'
     compile 'cn.ismartv.boringssl:libboringssl:1.1'
 }
