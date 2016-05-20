@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.telephony.TelephonyManager;
 import android.util.Base64;
 
 import org.json.JSONException;
@@ -15,6 +14,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import cn.ismartv.activator.core.http.HttpClientAPI;
@@ -39,6 +39,7 @@ public class IsmartvActivator {
     private static final String SIGN_FILE_NAME = "sign";
     private static final int DEFAULT_CONNECT_TIMEOUT = 2;
     private static final int DEFAULT_READ_TIMEOUT = 5;
+    private static final int REQUEST_CODE_ASK_READ_PHONE_STATE = 0x0001;
 
     private String manufacture;
     private String kind;
@@ -49,6 +50,7 @@ public class IsmartvActivator {
     private String fingerprint;
     private Callback mCallback;
     private Retrofit SKY_Retrofit;
+    private String deviceId;
 
 
     public IsmartvActivator(Context context, Callback callback) {
@@ -64,7 +66,8 @@ public class IsmartvActivator {
         kind = "lcd_s3a01";
         version = String.valueOf(getAppVersionCode());
         location = "SH";
-        sn = Md5.md5((getDeviceId() + Build.SERIAL).trim());
+        deviceId = UUID.randomUUID().toString();
+        sn = Md5.md5((deviceId + Build.SERIAL).trim());
         fingerprint = Md5.md5(sn);
 
         HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
@@ -115,12 +118,23 @@ public class IsmartvActivator {
     }
 
 
-    private String getDeviceId() {
-        String deviceId = new String();
-        TelephonyManager tm = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
-        deviceId = tm.getDeviceId() == null ? "" : tm.getDeviceId();
-        return deviceId;
-    }
+//    private String getDeviceId() {
+//        String deviceId = new String();
+//        TelephonyManager tm = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
+//        if (Build.VERSION.SDK_INT >= 23) {
+//            int checkCallPhonePermission = mContext.checkSelfPermission(Manifest.permission.READ_PHONE_STATE);
+//            if (checkCallPhonePermission != PackageManager.PERMISSION_GRANTED) {
+//                ((Activity) mContext).requestPermissions(new String[]{Manifest.permission.READ_PHONE_STATE}, REQUEST_CODE_ASK_READ_PHONE_STATE);
+//            } else {
+//                deviceId = tm.getDeviceId() == null ? "" : tm.getDeviceId();
+//            }
+//        } else {
+//            deviceId = tm.getDeviceId() == null ? "" : tm.getDeviceId();
+//        }
+//
+//
+//        return deviceId;
+//    }
 
     private boolean isSignFileExists() {
         return mContext.getFileStreamPath(SIGN_FILE_NAME).exists();
@@ -189,7 +203,6 @@ public class IsmartvActivator {
             JSONObject json = new JSONObject();
             String versionName = getAppVersionName();
             String serial = Build.SERIAL;
-            String deviceId = getDeviceId();
             String hh = Build.ID + "//" + Build.SERIAL;
             Md5.md5(Build.SERIAL + Build.ID);
             json.put("fingerprintE", Md5.md5(Build.SERIAL + Build.ID));
