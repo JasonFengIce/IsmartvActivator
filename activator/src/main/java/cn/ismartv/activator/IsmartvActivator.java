@@ -66,7 +66,7 @@ public class IsmartvActivator {
         kind = "lcd_s3a01";
         version = String.valueOf(getAppVersionCode());
         location = "SH";
-        deviceId = UUID.randomUUID().toString();
+        deviceId = "1234567890";
         sn = Md5.md5((deviceId + Build.SERIAL).trim());
         fingerprint = Md5.md5(sn);
 
