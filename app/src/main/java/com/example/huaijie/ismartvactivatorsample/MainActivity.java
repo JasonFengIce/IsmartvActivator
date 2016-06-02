@@ -23,16 +23,20 @@ public class MainActivity extends Activity {
     }
 
     public void active(View view) {
-        new IsmartvActivator(this, new IsmartvActivator.Callback() {
+        IsmartvActivator activator = new IsmartvActivator(this);
+        activator.setManufacture("sharp");
+        activator.setKind("lcd_s3a01");
+        activator.setLocation("SH");
+        activator.execute(new IsmartvActivator.Callback() {
             @Override
             public void onSuccess(Result result) {
-                Log.i(TAG, "result: " + new Gson().toJson(result));
+
             }
 
             @Override
             public void onFailure(String msg) {
 
             }
-        }).execute();
+        });
     }
 }

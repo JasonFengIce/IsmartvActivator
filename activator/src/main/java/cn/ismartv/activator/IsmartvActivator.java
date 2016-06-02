@@ -14,14 +14,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import cn.ismartv.activator.core.Md5;
 import cn.ismartv.activator.core.http.HttpClientAPI;
 import cn.ismartv.activator.core.rsa.RSACoder;
 import cn.ismartv.activator.core.rsa.SkyAESTool2;
 import cn.ismartv.activator.data.Result;
-import cn.ismartv.boringssl.Md5;
 import cn.ismartv.log.interceptor.HttpLoggingInterceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
@@ -34,12 +33,15 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * Created by huaijie on 5/17/16.
  */
 public class IsmartvActivator {
+    static {
+        System.loadLibrary("mac_address");
+    }
+
     private static final String TAG = "IsmartvActivator";
     private static final String DEFAULT_HOST = "http://peachtest.tvxio.com";
     private static final String SIGN_FILE_NAME = "sign";
     private static final int DEFAULT_CONNECT_TIMEOUT = 2;
     private static final int DEFAULT_READ_TIMEOUT = 5;
-    private static final int REQUEST_CODE_ASK_READ_PHONE_STATE = 0x0001;
 
     private String manufacture;
     private String kind;
@@ -52,21 +54,32 @@ public class IsmartvActivator {
     private Retrofit SKY_Retrofit;
     private String deviceId;
 
-
-    public IsmartvActivator(Context context, Callback callback) {
-        this(context, callback, DEFAULT_HOST);
+    public void setManufacture(String manufacture) {
+        this.manufacture = manufacture;
     }
 
-    public IsmartvActivator(Context context, Callback callback, String host) {
-        mCallback = callback;
+    public void setKind(String kind) {
+        this.kind = kind;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public IsmartvActivator(Context context) {
+        this(context, DEFAULT_HOST);
+    }
+
+    public IsmartvActivator(Context context, String host) {
         mContext = context;
-//        manufacture = Build.BRAND;
-        manufacture = "sharp";
-//        kind = Build.PRODUCT.replaceAll(" ", "_").toLowerCase();
-        kind = "lcd_s3a01";
+        manufacture = Build.BRAND;
+        kind = Build.PRODUCT.replaceAll(" ", "_").toLowerCase();
         version = String.valueOf(getAppVersionCode());
-        location = "SH";
-        deviceId = "1234567890";
+        deviceId = getMacAddress();
         sn = Md5.md5((deviceId + Build.SERIAL).trim());
         fingerprint = Md5.md5(sn);
 
@@ -86,7 +99,8 @@ public class IsmartvActivator {
     }
 
 
-    public void execute() {
+    public void execute(Callback callback) {
+        mCallback = callback;
         if (isSignFileExists()) {
             active();
         } else {
@@ -116,25 +130,6 @@ public class IsmartvActivator {
         }
         return appVersionName;
     }
-
-
-//    private String getDeviceId() {
-//        String deviceId = new String();
-//        TelephonyManager tm = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
-//        if (Build.VERSION.SDK_INT >= 23) {
-//            int checkCallPhonePermission = mContext.checkSelfPermission(Manifest.permission.READ_PHONE_STATE);
-//            if (checkCallPhonePermission != PackageManager.PERMISSION_GRANTED) {
-//                ((Activity) mContext).requestPermissions(new String[]{Manifest.permission.READ_PHONE_STATE}, REQUEST_CODE_ASK_READ_PHONE_STATE);
-//            } else {
-//                deviceId = tm.getDeviceId() == null ? "" : tm.getDeviceId();
-//            }
-//        } else {
-//            deviceId = tm.getDeviceId() == null ? "" : tm.getDeviceId();
-//        }
-//
-//
-//        return deviceId;
-//    }
 
     private boolean isSignFileExists() {
         return mContext.getFileStreamPath(SIGN_FILE_NAME).exists();
@@ -218,7 +213,7 @@ public class IsmartvActivator {
     }
 
     private void writeToSign(byte[] bytes) {
-        FileOutputStream fs = null;
+        FileOutputStream fs;
         try {
             fs = mContext.openFileOutput(SIGN_FILE_NAME, Context.MODE_WORLD_READABLE);
             fs.write(bytes);
@@ -267,4 +262,6 @@ public class IsmartvActivator {
 
         void onFailure(String msg);
     }
+
+    public native String getMacAddress();
 }

@@ -6,7 +6,7 @@ Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
 
 def projectName = "activator"
-def versionTag = "1.5"
+def versionTag = "1.6"
 def groupId = "cn.ismartv.activator"
 def siteUrl = 'git@github.com:JasonFengIce/IsmartvActivator.git'
 def gitUrl = 'git@github.com:JasonFengIce/IsmartvActivator.gitt'
@@ -52,6 +52,12 @@ android {
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
+
+        ndk {
+            moduleName "mac_address"
+            abiFilters "all"
+            ldLibs = ['log']
+        }
     }
     buildTypes {
         release {
@@ -63,6 +69,8 @@ android {
     lintOptions {
         abortOnError false
     }
+
+
 }
 
 dependencies {
@@ -73,7 +81,6 @@ dependencies {
     compile 'com.squareup.retrofit2:retrofit:2.0.2'
     compile 'com.squareup.retrofit2:converter-gson:2.0.2'
     compile 'com.google.code.gson:gson:2.5'
-    compile 'cn.ismartv.boringssl:libboringssl:1.1'
 }
 
 task sourcesJar(type: Jar) {
